@@ -1,11 +1,11 @@
 name: Beta Release
 
-on:
-  push:
-    branches:
-      - beta
-    paths:
-      - src/**
+# on:
+#   push:
+#     branches:
+#       - beta
+#     paths:
+#       - src/**
 jobs:
   release:
     runs-on: ubuntu-latest

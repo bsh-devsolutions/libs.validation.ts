@@ -1,13 +1,13 @@
 name: Release
-on:
-  push:
-    branches:
-      - main
-      - beta
-  pull-request:
-    branches:
-      - main
-      - beta
+# on:
+#   push:
+#     branches:
+#       - main
+#       - beta
+#   pull-request:
+#     branches:
+#       - main
+#       - beta
 
 jobs:
   test:

@@ -1,10 +1,10 @@
 name: Release
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - package.json
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - package.json
 jobs:
   release:
     runs-on: ubuntu-latest
