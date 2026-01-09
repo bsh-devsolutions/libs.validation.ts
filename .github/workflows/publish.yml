@@ -1,0 +1,108 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-beta'
+      - 'v*.*.*-alpha'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Extract version and npm tag from tag
+        id: tag_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "tag_name=$TAG_NAME"
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+          # Extract version and optional tag (v<version>[-<tag>])
+          if [[ "$TAG_NAME" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)(-(alpha|beta))?$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            TAG="${BASH_REMATCH[3]}"
+          else
+            echo "Tag format invalid: $TAG_NAME"
+            exit 1
+          fi
+
+          if [[ -z "$TAG" ]]; then
+            NPM_TAG="latest"
+          else
+            NPM_TAG="$TAG"
+          fi
+
+          if [ "$NPM_TAG" = "latest" ]; then
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "npm_tag=latest" >> $GITHUB_OUTPUT
+            echo "version=$VERSION"
+            echo "npm_tag=latest"
+          else
+            echo "version=$VERSION-$NPM_TAG" >> $GITHUB_OUTPUT
+            echo "npm_tag=$NPM_TAG" >> $GITHUB_OUTPUT
+            echo "version=$VERSION-$NPM_TAG"
+            echo "npm_tag=$NPM_TAG"
+          fi
+        
+      - name: Update package.json version
+        run: |
+          VERSION=${{ steps.tag_version.outputs.version }}
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          
+          echo "Current version: $CURRENT_VERSION"
+          echo "Target version: $VERSION"
+          
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            echo "Updating package.json version to: $VERSION"
+            npm version $VERSION --no-git-tag-version
+          else
+            echo "Version already set to $VERSION, skipping update"
+          fi
+          
+      - name: Verify package.json version
+        run: |
+          ACTUAL_VERSION=$(node -p "require('./package.json').version")
+          EXPECTED_VERSION=${{ steps.tag_version.outputs.version }}
+          echo "Package version: $ACTUAL_VERSION (expected: $EXPECTED_VERSION)"
+          if [ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "Error: Version mismatch!"
+            exit 1
+          fi
+      
+      - name: Publish to npm
+        run: |
+          VERSION=${{ steps.tag_version.outputs.version }}
+          NPM_TAG=${{ steps.tag_version.outputs.npm_tag }}
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+
+          echo "========================================="
+          echo "Publishing to npm:"
+          echo "  Package: $PACKAGE_NAME"
+          echo "  Version: $VERSION"
+          echo "      Tag: $NPM_TAG"
+          echo "========================================="
+          npm publish --tag $NPM_TAG --access public
+          echo "Successfully published $PACKAGE_NAME@$VERSION with tag: $NPM_TAG"

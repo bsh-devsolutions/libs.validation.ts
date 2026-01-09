@@ -1,5 +1,5 @@
 {
-  "name": "@bshg/validation",
+  "name": "@bshsolutions/validation",
   "version": "0.6.6-1",
   "description": "Validation Library for TypeScript projects",
   "main": "./lib/index.js",
@@ -37,7 +37,7 @@
   "author": "Bouslaih Hamza <hamza.bousalih.bsh@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bshgenerator/ts-validation.git"
+    "url": "git+https://github.com/bsh-devsolutions/libs.validation.ts"
   },
   "license": "MIT",
   "publishConfig": {
