@@ -8,3 +8,4 @@ deno/lib
 playground.ts
 todos
 ___.txt
+.DS_Store
